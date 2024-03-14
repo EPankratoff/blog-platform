@@ -1,0 +1,16 @@
+.card-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  padding-top: 4px;
+}
+
+.card-tag-item {
+  border: 1px solid var(--tag);
+  border-radius: 2px;
+  color: var(--tag);
+  padding: 2px 6px 3px 5px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 15px;
+}

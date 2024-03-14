@@ -1,0 +1,10 @@
+.app {
+  height: 1500px;
+  background-color: rgb(235, 238, 243);
+
+  &-main {
+    display: flex;
+    justify-content: center;
+    padding-top: 26px;
+  }
+}
