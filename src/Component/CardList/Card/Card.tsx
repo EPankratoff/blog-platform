@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import classes from './Card.module.scss';
 import CardArticle from './CardArticle/CardArticle';
