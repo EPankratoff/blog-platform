@@ -1,12 +1,14 @@
 import classes from './CardArticle.module.scss';
 
-export default function CardArticle() {
+
+type ICardArticle = {
+  description: string
+}
+export default function CardArticle({ description }: ICardArticle) {
   return (
     <div className={classes['card-article']}>
       <p className={classes['card-article-description']}>
-        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Provident quam natus ullam
-        asperiores vero aspernatur optio officiis quo amet placeat cupiditate accusantium voluptas
-        reprehenderit, repellendus nihil cum corporis ipsa architecto!
+        {description}
       </p>
     </div>
   );

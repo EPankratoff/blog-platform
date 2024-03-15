@@ -9,7 +9,7 @@ export type CardData = {
   title: string;
   description: string;
   body: string;
-  tags: string[];
+  tagList: string[];
   createdAt: string;
   updatedAt: string;
   favorited: boolean;
@@ -23,15 +23,19 @@ export type CardData = {
   articlesCount: number;
 };
 
-interface CardProps {
+export interface CardProps {
   cardData: CardData;
 }
 
 export default function Card({ cardData }: CardProps) {
+
+
+  const { title, author, createdAt, description, tagList } = cardData
+
   return (
     <div className={classes['app-card']}>
-      <CardTitle />
-      <CardArticle />
+      <CardTitle title={title} author={author} createdAt={createdAt} tagList={tagList} />
+      <CardArticle description={description} />
     </div>
   );
 }
