@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
-import { CardData } from '../Component/CardList/Card/Card';
+import { CardData } from '../Types/CardTyps';
 
 type Cards = CardData[];
 
@@ -11,6 +11,7 @@ export type FetchSliceState = {
   loading: boolean;
   articles: Cards;
   articlesCount: number;
+  currentArticle: CardData | null;
 };
 
 const initialState: FetchSliceState = {
@@ -18,13 +19,14 @@ const initialState: FetchSliceState = {
   error: null,
   articles: [],
   articlesCount: 0,
+  currentArticle: null,
 };
 
-export const fetchCard = createAsyncThunk<
+export const fetchCards = createAsyncThunk<
   { articles: Cards },
   { offset: number },
   { rejectValue: string }
->('fetch/fetchCard', async ({ offset }, { rejectWithValue }) => {
+>('fetch/fetchCards', async ({ offset }, { rejectWithValue }) => {
   try {
     const response = await fetch(`${baseUrl}/articles?limit=5&offset=${offset}`);
     if (!response.ok) {
@@ -37,21 +39,49 @@ export const fetchCard = createAsyncThunk<
   }
 });
 
+export const fetchCard = createAsyncThunk<CardData, { slug: string }, { rejectValue: string }>(
+  'fetch/fetchCard',
+  async (args, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${baseUrl}/articles/${args.slug}`);
+      if (!response.ok) {
+        throw new Error(`Неудалось получить slug ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(`Error: ${(error as Error).message}`);
+    }
+  }
+);
+
 const fetchSlice = createSlice({
   name: 'fetch',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(fetchCards.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCards.fulfilled, (state, action) => {
+        state.articles = action.payload.articles;
+        state.articlesCount = action.payload.articles.length;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(fetchCards.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ? action.payload : 'Unknown error';
+      })
       .addCase(fetchCard.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchCard.fulfilled, (state, action) => {
-        state.articles = action.payload.articles;
-        state.articlesCount = action.payload.articles.length;
         state.loading = false;
-        state.error = null;
+        state.currentArticle = action.payload;
       })
       .addCase(fetchCard.rejected, (state, action) => {
         state.loading = false;
