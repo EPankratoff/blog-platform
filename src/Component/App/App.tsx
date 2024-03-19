@@ -1,4 +1,4 @@
-import Card from '../Card/Card';
+// import Card from '../Card/Card';
 import CardList from '../CardList/CardList';
 import Header from '../Header/Header';
 
@@ -10,7 +10,7 @@ export default function App() {
       <Header />
       <main className={classes['app-main']}>
         <CardList />
-        <Card />
+        {/* <Card /> */}
       </main>
     </div>
   );

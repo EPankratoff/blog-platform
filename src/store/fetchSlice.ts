@@ -23,7 +23,7 @@ const initialState: FetchSliceState = {
 };
 
 export const fetchCards = createAsyncThunk<
-  { articles: Cards },
+  FetchSliceState,
   { offset: number },
   { rejectValue: string }
 >('fetch/fetchCards', async ({ offset }, { rejectWithValue }) => {
@@ -67,7 +67,7 @@ const fetchSlice = createSlice({
       })
       .addCase(fetchCards.fulfilled, (state, action) => {
         state.articles = action.payload.articles;
-        state.articlesCount = action.payload.articles.length;
+        state.articlesCount = action.payload.articlesCount;
         state.loading = false;
         state.error = null;
       })
