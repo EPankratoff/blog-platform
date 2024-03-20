@@ -13,13 +13,7 @@ module.exports = {
     /* 'plugin:import/recommended', */
     'prettier',
   ],
-  ignorePatterns: [
-    'dist',
-    '.eslintrc.cjs',
-    'node_modules',
-    'build',
-    'vite.config.ts',
-  ],
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'build', 'vite.config.ts'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: './tsconfig.json',
@@ -32,10 +26,7 @@ module.exports = {
   plugins: ['react-refresh', 'react', 'jsx-a11y', /* 'prettier', */ 'import'],
   rules: {
     'no-plusplus': ['error', { allowForLoopAfterthoughts: true }],
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     indent: ['error', 2],
     'linebreak-style': [0, 'windows'],
     'react/react-in-jsx-scope': 'off',
@@ -53,21 +44,11 @@ module.exports = {
     'import/order': [
       2,
       {
-        groups: [
-          'builtin',
-          'external',
-          'internal',
-          'parent',
-          'sibling',
-          'index',
-        ],
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
         'newlines-between': 'always',
       },
     ],
-    'react/jsx-filename-extension': [
-      2,
-      { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
-    ],
+    'react/jsx-filename-extension': [2, { extensions: ['.js', '.jsx', '.ts', '.tsx'] }],
     'no-param-reassign': [
       'error',
       {
@@ -75,5 +56,7 @@ module.exports = {
         ignorePropertyModificationsFor: ['state'],
       },
     ],
+    'react/jsx-props-no-spreading': 'off',
   },
 };
+

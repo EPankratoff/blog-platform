@@ -48,7 +48,7 @@ export const fetchCard = createAsyncThunk<CardData, { slug: string }, { rejectVa
         throw new Error(`Неудалось получить slug ${response.status}`);
       }
       const data = await response.json();
-      return data;
+      return data.article;
     } catch (error) {
       return rejectWithValue(`Error: ${(error as Error).message}`);
     }

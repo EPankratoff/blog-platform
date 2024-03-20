@@ -19,13 +19,13 @@ export default function CardList() {
   const loading = useAppSelector((state) => state.fetchReducer.loading);
 
   const cardsItem = articles.map((article) => (
-    <li key={uniqid.time('cards:')}>
-      <CardHeader article={article} />
+    <li className={classes['cardlist-item']} key={uniqid.time('cards:')}>
+      <CardHeader isAlone article={article} />
     </li>
   ));
 
   return (
-    <div>
+    <>
       {loading ? <Spin /> : <ul className={classes.cardlist}>{cardsItem}</ul>}
 
       <ConfigProvider
@@ -50,6 +50,6 @@ export default function CardList() {
           }}
         />
       </ConfigProvider>
-    </div>
+    </>
   );
 }
