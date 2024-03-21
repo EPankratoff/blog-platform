@@ -4,6 +4,7 @@ import Card from '../Card/Card';
 import CardList from '../CardList/CardList';
 import SignIn from '../SignIn/SignIn';
 import SignUp from '../SignUp/SignUp';
+import EditProfile from '../EditProfile/EditProfile';
 import Header from '../Header/Header';
 
 import classes from './App.module.scss';
@@ -24,6 +25,7 @@ export default function App() {
             />
             <Route path="/sign-in" component={SignIn} />
             <Route path="/sign-up" component={SignUp} />
+            <Route path="/profile" component={EditProfile} />
             <Route path="/" exact component={CardList} />
             <Redirect to="/" />
           </Switch>

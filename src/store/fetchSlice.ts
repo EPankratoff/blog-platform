@@ -1,25 +1,28 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { Action, PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 import { CardData } from '../Types/CardTyps';
+import { User, CreateUser, UserLogin } from '../Types/UserTyps';
 
 type Cards = CardData[];
 
 const baseUrl = 'https://blog.kata.academy/api';
 
 export type FetchSliceState = {
-  error: string | null;
+  error: string | { username?: string; email?: string };
   loading: boolean;
   articles: Cards;
   articlesCount: number;
   currentArticle: CardData | null;
+  currentUser: User | null;
 };
 
 const initialState: FetchSliceState = {
   loading: false,
-  error: null,
+  error: '',
   articles: [],
   articlesCount: 0,
   currentArticle: null,
+  currentUser: null,
 };
 
 export const fetchCards = createAsyncThunk<
@@ -55,21 +58,111 @@ export const fetchCard = createAsyncThunk<CardData, { slug: string }, { rejectVa
   }
 );
 
+export const fetchCreateUser = createAsyncThunk<User, CreateUser, { rejectValue: string }>(
+  'fetch/fetchCreateUser',
+  async (body, { rejectWithValue }) => {
+    const response = await fetch(`${baseUrl}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      if (!('username' in data.errors) && !('email' in data.errors)) {
+        if ('email or password' in data.errors) {
+          return rejectWithValue('Error, email or password is invalid');
+        }
+        return rejectWithValue(`Error, ${data.errors.message}`);
+      }
+      return rejectWithValue(data.errors);
+    }
+    return data.user;
+  }
+);
+
+export const fetchUser = createAsyncThunk<User, string, { rejectValue: string }>(
+  'fetch/fetchUser',
+  async (token, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${baseUrl}/user`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Server Error: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.user;
+    } catch (error: unknown) {
+      return rejectWithValue(`Error: ${(error as Error).message}`);
+    }
+  }
+);
+
+export const fetchUserLogin = createAsyncThunk<User, UserLogin, { rejectValue: string }>(
+  'fetch/fetchUserLogin',
+  async (body, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${baseUrl}/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        throw new Error(`Server Error: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.user;
+    } catch (error: unknown) {
+      return rejectWithValue(`Error: ${(error as Error).message}`);
+    }
+  }
+);
+
+function isError(action: Action) {
+  return action.type.endsWith('rejected');
+}
+
 const fetchSlice = createSlice({
   name: 'fetch',
   initialState,
-  reducers: {},
+  reducers: {
+    logOut: (state) => {
+      localStorage.removeItem('token');
+      state.currentUser = null;
+    },
+    clearError: (state, action) => {
+      if (action.payload === 'all') {
+        state.error = '';
+      } else if (typeof state.error === 'object' && action.payload === 'email') {
+        delete state.error.email;
+      } else if (typeof state.error === 'object' && action.payload === 'username') {
+        delete state.error.username;
+      }
+      if (!Object.keys(state.error).length) {
+        state.error = '';
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCards.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.error = '';
       })
       .addCase(fetchCards.fulfilled, (state, action) => {
         state.articles = action.payload.articles;
         state.articlesCount = action.payload.articlesCount;
         state.loading = false;
-        state.error = null;
+        state.error = '';
       })
       .addCase(fetchCards.rejected, (state, action) => {
         state.loading = false;
@@ -77,7 +170,7 @@ const fetchSlice = createSlice({
       })
       .addCase(fetchCard.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.error = '';
       })
       .addCase(fetchCard.fulfilled, (state, action) => {
         state.loading = false;
@@ -86,8 +179,40 @@ const fetchSlice = createSlice({
       .addCase(fetchCard.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ? action.payload : 'Unknown error';
+      })
+      .addCase(fetchCreateUser.pending, (state) => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(fetchCreateUser.fulfilled, (state, action) => {
+        state.currentUser = action.payload;
+        localStorage.setItem('token', action.payload.token);
+        state.loading = false;
+      })
+      .addCase(fetchUserLogin.pending, (state) => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(fetchUserLogin.fulfilled, (state, action) => {
+        state.currentUser = action.payload;
+        localStorage.setItem('token', action.payload.token);
+        state.loading = false;
+      })
+      .addCase(fetchUser.pending, (state) => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(fetchUser.fulfilled, (state, action) => {
+        state.currentUser = action.payload;
+        localStorage.setItem('token', action.payload.token);
+        state.loading = false;
+      })
+      .addMatcher(isError, (state, action: PayloadAction<string>) => {
+        state.error = action.payload;
+        state.loading = false;
       });
   },
 });
 
+export const { logOut, clearError } = fetchSlice.actions;
 export default fetchSlice.reducer;

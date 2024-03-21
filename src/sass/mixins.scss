@@ -17,7 +17,12 @@
 @mixin form-sign {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  // gap: 1.5rem;
+}
+
+@mixin form-inputs {
+  border: none;
+  padding-bottom: 20px;
 }
 
 @mixin form-input {
@@ -26,6 +31,7 @@
   width: 320px;
   height: 40px;
   padding: 8px 12px;
+  outline-color: #1890ff;
 }
 
 @mixin form-title {
@@ -37,6 +43,7 @@
 }
 
 @mixin form-label {
+  padding-top: 12px;
   color: #262626;
   display: flex;
   flex-direction: column;
@@ -46,6 +53,7 @@
 }
 
 @mixin form-button {
+  padding-top: 20px;
   width: 319px;
   height: 40px;
   background: var(--button);
@@ -61,6 +69,7 @@
 }
 
 @mixin form-span {
+  padding-top: 8px;
   font-size: 12px;
   font-weight: 400;
   line-height: 20px;
