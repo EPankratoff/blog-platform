@@ -1,9 +1,9 @@
 import { Link, Redirect, useHistory } from 'react-router-dom';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
-import { fetchUserLogin } from '../../store/fetchSlice';
+import { clearError, fetchUserLogin } from '../../store/fetchSlice';
 
 import classes from './SignIn.module.scss';
 
@@ -17,33 +17,54 @@ export default function SignIn() {
   const token = localStorage.getItem('token');
   const { loading, error } = useAppSelector((state) => state.fetchReducer);
   const history = useHistory();
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const {
     register,
     formState: { errors, submitCount, isSubmitting },
     handleSubmit,
-    reset,
-  } = useForm<IFieldIn>({
-    mode: 'onBlur',
-  });
+  } = useForm<IFieldIn>();
 
   useEffect(() => {
-    if (submitCount && !error && !loading && !isSubmitting) {
+    if (submitCount && !error && !loading && !isSubmitting && !Object.keys(errors).length) {
       history.push('/');
     }
-  }, [error, errors, history, isSubmitting, loading, submitCount]);
+  }, [isSubmitting, loading]);
 
-  const onSubmit: SubmitHandler<IFieldIn> = (data) => {
-    dispatch(
-      fetchUserLogin({
-        user: {
-          email: data.email,
-          password: data.password,
-        },
-      })
-    );
-    reset();
+  const onSubmit: SubmitHandler<IFieldIn> = async (data) => {
+    try {
+      const resultAction = await dispatch(
+        fetchUserLogin({
+          user: {
+            email: data.email,
+            password: data.password,
+          },
+        })
+      );
+
+      if (fetchUserLogin.rejected.match(resultAction)) {
+        if (resultAction.payload === 'Error, email or password is invalid') {
+          setPasswordError('Неверный email или пароль');
+        } else {
+          setPasswordError('Не удалось войти. Пожалуйста, попробуйте снова');
+        }
+      }
+      // eslint-disable-next-line @typescript-eslint/no-shadow
+    } catch (error) {
+      setPasswordError(`Ошибка при отправке данных: ${error}`);
+    }
   };
+
+  // function renderErrors(field: 'email' | 'password') {
+  //   if (typeof error === 'object' && error[field]) {
+  //     return <span className={classes['form-sign-in-error']}>{`${field} уже существует`}</span>;
+  //   }
+  //   if (field === 'password' && passwordError) {
+  //     return <span className={classes['form-sign-in-error']}>{passwordError}</span>;
+  //   }
+  //   return null;
+  // }
+
   return token ? (
     <Redirect to="/" />
   ) : (
@@ -69,6 +90,8 @@ export default function SignIn() {
           {errors.email && (
             <span className={classes['form-sign-in-error']}>{errors.email.message as string}</span>
           )}
+          {/* {renderErrors('email')} */}
+          <span className={classes['form-sign-in-error']}>{passwordError}</span>
 
           <label className={classes['form-sign-in-label']}>
             Password
@@ -87,6 +110,7 @@ export default function SignIn() {
                   value: /^(?=.*[a-z]*)(?=.*[A-Z]*)(?=.*\d*)[^\s]{6,40}$/i,
                   message: 'Please enter valid password!',
                 },
+                onChange: () => dispatch(clearError('password')),
               })}
               placeholder="Password"
               className={classes['form-sign-in-input']}
@@ -99,7 +123,11 @@ export default function SignIn() {
             </span>
           )}
         </fieldset>
-        <button className={classes['form-sign-in-button']} type="submit">
+        <button
+          onClick={() => dispatch(clearError('all'))}
+          className={classes['form-sign-in-button']}
+          type="submit"
+        >
           Login
         </button>
         <span className={classes['form-sign-in-span']}>

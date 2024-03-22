@@ -1,14 +1,14 @@
 import { Action, PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 import { CardData } from '../Types/CardTyps';
-import { User, CreateUser, UserLogin } from '../Types/UserTyps';
+import { User, CreateUser, UserLogin, EditUser } from '../Types/UserTyps';
 
 type Cards = CardData[];
 
 const baseUrl = 'https://blog.kata.academy/api';
 
 export type FetchSliceState = {
-  error: string | { username?: string; email?: string };
+  error: string | { username?: string; email?: string; password?: string };
   loading: boolean;
   articles: Cards;
   articlesCount: number;
@@ -108,24 +108,52 @@ export const fetchUser = createAsyncThunk<User, string, { rejectValue: string }>
 export const fetchUserLogin = createAsyncThunk<User, UserLogin, { rejectValue: string }>(
   'fetch/fetchUserLogin',
   async (body, { rejectWithValue }) => {
-    try {
-      const response = await fetch(`${baseUrl}/users/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-      if (!response.ok) {
-        throw new Error(`Server Error: ${response.status}`);
+    const response = await fetch(`${baseUrl}/users/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      if (!('password' in data.errors) && !('email' in data.errors)) {
+        if ('email or password' in data.errors) {
+          return rejectWithValue('Error, email or password is invalid');
+        }
+        return rejectWithValue(`Error, ${data.errors.message}`);
       }
-      const data = await response.json();
-      return data.user;
-    } catch (error: unknown) {
-      return rejectWithValue(`Error: ${(error as Error).message}`);
+      return rejectWithValue(data.errors);
     }
+    return data.user;
   }
 );
+
+export const fetchUserEdit = createAsyncThunk<
+  User,
+  { body: EditUser; token: string },
+  { rejectValue: string }
+>('fetch/fetchUserEdit', async (args, { rejectWithValue }) => {
+  const response = await fetch(`${baseUrl}/user`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Token ${args.token}`,
+    },
+    body: JSON.stringify(args.body),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    if (!('username' in data.errors) && !('email' in data.errors)) {
+      if ('email or password' in data.errors) {
+        return rejectWithValue('Error, email or password is invalid');
+      }
+      return rejectWithValue(`Error, ${data.errors.message}`);
+    }
+    return rejectWithValue(data.errors);
+  }
+  return data.user;
+});
 
 function isError(action: Action) {
   return action.type.endsWith('rejected');
@@ -146,6 +174,8 @@ const fetchSlice = createSlice({
         delete state.error.email;
       } else if (typeof state.error === 'object' && action.payload === 'username') {
         delete state.error.username;
+      } else if (typeof state.error === 'object' && action.payload === 'password') {
+        delete state.error.password;
       }
       if (!Object.keys(state.error).length) {
         state.error = '';
@@ -203,6 +233,15 @@ const fetchSlice = createSlice({
         state.error = '';
       })
       .addCase(fetchUser.fulfilled, (state, action) => {
+        state.currentUser = action.payload;
+        localStorage.setItem('token', action.payload.token);
+        state.loading = false;
+      })
+      .addCase(fetchUserEdit.pending, (state) => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(fetchUserEdit.fulfilled, (state, action) => {
         state.currentUser = action.payload;
         localStorage.setItem('token', action.payload.token);
         state.loading = false;

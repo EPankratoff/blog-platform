@@ -1,4 +1,9 @@
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { Redirect, useHistory } from 'react-router-dom';
+import { useEffect } from 'react';
+
+import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
+import { clearError, fetchUserEdit } from '../../store/fetchSlice';
 
 import classes from './EditProfile.module.scss';
 
@@ -10,21 +15,59 @@ export interface IFieldEdit {
 }
 
 export default function EditProfile() {
+  const dispatch = useAppDispatch();
+  const token = localStorage.getItem('token');
+  const history = useHistory();
+
+  const { loading, error, currentUser } = useAppSelector((state) => state.fetchReducer);
+
   const {
     register,
-    formState: { errors },
+    formState: { errors, submitCount, isSubmitting },
     handleSubmit,
-    reset,
+    // reset,
   } = useForm<IFieldEdit>({
     mode: 'onBlur',
   });
 
   const onSubmit: SubmitHandler<IFieldEdit> = (data) => {
-    console.log(JSON.stringify(data));
-    reset();
+    if (token && currentUser) {
+      dispatch(
+        fetchUserEdit({
+          body: {
+            user: {
+              username: data.username,
+              email: data.email,
+              password: data.password,
+              image: data.avatar,
+            },
+          },
+          token,
+        })
+      );
+    }
   };
 
-  return (
+  useEffect(() => {
+    if (submitCount && !error && !loading && !isSubmitting && !Object.keys(errors).length) {
+      history.push('/');
+    }
+  }, [isSubmitting, loading]);
+
+  function renderErrors(field: 'username' | 'email') {
+    if (typeof error === 'object') {
+      if (error[field]) {
+        return (
+          <span className={classes['form-edit-profile-error']}>{`${field} уже существует`}</span>
+        );
+      }
+    }
+    return null;
+  }
+
+  return !token ? (
+    <Redirect to="/" />
+  ) : (
     <div className={classes['form-wrap']}>
       <form onSubmit={handleSubmit(onSubmit)} className={classes['form-edit-profile']}>
         <h2 className={classes['form-edit-profile-title']}>Edit Profile</h2>
@@ -47,18 +90,19 @@ export default function EditProfile() {
                   value: /^[a-z0-9_-]{3,20}$/,
                   message: 'Please enter valid username!',
                 },
+                onChange: () => dispatch(clearError('username')),
               })}
               placeholder="Username"
               className={classes['form-edit-profile-input']}
               type="text"
             />
           </label>
-
           {errors.username && (
             <span className={classes['form-edit-profile-error']}>
               {errors.username.message as string}
             </span>
           )}
+          {renderErrors('username')}
 
           <label className={classes['form-edit-profile-label']}>
             Email address
@@ -69,6 +113,7 @@ export default function EditProfile() {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9-]+.+.[A-Z]{2,4}$/i,
                   message: 'Please enter valid email!',
                 },
+                onChange: () => dispatch(clearError('email')),
               })}
               placeholder="Email address"
               className={classes['form-edit-profile-input']}
@@ -80,9 +125,10 @@ export default function EditProfile() {
               {errors.email.message as string}
             </span>
           )}
+          {renderErrors('email')}
 
           <label className={classes['form-edit-profile-label']}>
-            Password
+            New Password
             <input
               {...register('password', {
                 required: 'Поле обязательно к заполнению',
@@ -113,7 +159,7 @@ export default function EditProfile() {
           <label className={classes['form-edit-profile-label']}>
             Avatar image(url)
             <input
-              {...register('avatar', {})}
+              {...register('avatar')}
               placeholder="Avatar image"
               className={classes['form-edit-profile-input']}
               type="url"
@@ -126,7 +172,7 @@ export default function EditProfile() {
           )}
         </fieldset>
         <button className={classes['form-edit-profile-button']} type="submit">
-          Create
+          Save
         </button>
       </form>
     </div>
