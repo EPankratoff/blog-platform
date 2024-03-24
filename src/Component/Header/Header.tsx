@@ -25,7 +25,7 @@ export default function Header() {
       </Link>
       {currentUser ? (
         <div className={classes['header-btn']}>
-          <Link to="/sign-in">
+          <Link to="/new-article">
             <button className={classes['header-btn_create']} type="button">
               Create article
             </button>
