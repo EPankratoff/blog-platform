@@ -16,3 +16,12 @@ export type CardData = {
   };
   articlesCount: number;
 };
+
+export type CreateArticle = {
+  article: {
+    title: string;
+    description: string;
+    body: string;
+    tagList: string[];
+  };
+};

@@ -25,11 +25,13 @@ export default function CardHeader({
 
   const formateDate = format(parseISO(createdAt), 'MMMM dd, yyyy', { locale: enGB });
 
-  const tagsItem = tagList.map((tag) => (
-    <li key={uniqid.time('tag:')} className={classes['card-tag-item']}>
-      {tag}
-    </li>
-  ));
+  const tagsItem = tagList
+    .filter((tag) => tag?.match(/\S/))
+    .map((tag) => (
+      <li key={uniqid.time('tag:')} className={classes['card-tag-item']}>
+        {tag}
+      </li>
+    ));
 
   return (
     <header className={headerClass}>

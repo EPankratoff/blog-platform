@@ -28,6 +28,13 @@ export default function App() {
             <Route path="/sign-up" component={SignUp} />
             <Route path="/profile" component={EditProfile} />
             <Route path="/new-article" component={ArticleForm} />
+            <Route
+              path="/articles/:slug/edit"
+              render={({ match }) => {
+                const { slug } = match.params;
+                return <ArticleForm articleSlug={slug} />;
+              }}
+            />
             <Route path="/" exact component={CardList} />
             <Redirect to="/" />
           </Switch>

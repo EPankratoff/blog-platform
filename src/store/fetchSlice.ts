@@ -1,6 +1,6 @@
 import { Action, PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
-import { CardData } from '../Types/CardTyps';
+import { CardData, CreateArticle } from '../Types/CardTyps';
 import { User, CreateUser, UserLogin, EditUser } from '../Types/UserTyps';
 
 type Cards = CardData[];
@@ -42,21 +42,22 @@ export const fetchCards = createAsyncThunk<
   }
 });
 
-export const fetchCard = createAsyncThunk<CardData, { slug: string }, { rejectValue: string }>(
-  'fetch/fetchCard',
-  async (args, { rejectWithValue }) => {
-    try {
-      const response = await fetch(`${baseUrl}/articles/${args.slug}`);
-      if (!response.ok) {
-        throw new Error(`Неудалось получить slug ${response.status}`);
-      }
-      const data = await response.json();
-      return data.article;
-    } catch (error) {
-      return rejectWithValue(`Error: ${(error as Error).message}`);
+export const fetchCard = createAsyncThunk<
+  CardData,
+  { slug: string; token: string | null },
+  { rejectValue: string }
+>('fetch/fetchCard', async (args, { rejectWithValue }) => {
+  try {
+    const response = await fetch(`${baseUrl}/articles/${args.slug}`);
+    if (!response.ok) {
+      throw new Error(`Неудалось получить slug ${response.status}`);
     }
+    const data = await response.json();
+    return data.article;
+  } catch (error) {
+    return rejectWithValue(`Error: ${(error as Error).message}`);
   }
-);
+});
 
 export const fetchCreateUser = createAsyncThunk<User, CreateUser, { rejectValue: string }>(
   'fetch/fetchCreateUser',
@@ -155,6 +156,26 @@ export const fetchUserEdit = createAsyncThunk<
   return data.user;
 });
 
+export const fetchCreateArticle = createAsyncThunk<
+  CardData,
+  { body: CreateArticle; token: string },
+  { rejectValue: string }
+>('fetch/fetchCreateArticle', async (args, { rejectWithValue }) => {
+  const response = await fetch(`${baseUrl}/articles`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Token ${args.token}`,
+    },
+    body: JSON.stringify(args.body),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    return rejectWithValue(data.errors.message);
+  }
+  return data.article;
+});
+
 function isError(action: Action) {
   return action.type.endsWith('rejected');
 }
@@ -245,6 +266,14 @@ const fetchSlice = createSlice({
         state.currentUser = action.payload;
         localStorage.setItem('token', action.payload.token);
         state.loading = false;
+      })
+      .addCase(fetchCreateArticle.pending, (state) => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(fetchCreateArticle.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentArticle = action.payload;
       })
       .addMatcher(isError, (state, action: PayloadAction<string>) => {
         state.error = action.payload;

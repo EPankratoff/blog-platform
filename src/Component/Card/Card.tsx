@@ -13,8 +13,14 @@ export default function Card({ cardSlug }: { cardSlug: string }) {
   const { currentArticle, loading } = useAppSelector((state) => state.fetchReducer);
   const dispatch = useAppDispatch();
 
+  const token = localStorage.getItem('token');
+
   useEffect(() => {
-    dispatch(fetchCard({ slug: cardSlug }));
+    if (token) {
+      dispatch(fetchCard({ slug: cardSlug, token }));
+    } else {
+      dispatch(fetchCard({ slug: cardSlug, token: null }));
+    }
   }, [dispatch, cardSlug]);
 
   function renderArticle() {
