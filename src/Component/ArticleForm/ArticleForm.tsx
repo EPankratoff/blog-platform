@@ -77,7 +77,7 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
     }
     // reset()
   };
-
+  // (currentArticle && currentUser && currentArticle.author.username !== currentUser.username)
   return !token ||
     (currentArticle && currentUser && currentArticle.author.username !== currentUser.username) ? (
     <Redirect to="/sign-in" />

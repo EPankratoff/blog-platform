@@ -27,9 +27,11 @@ export default function Card({ cardSlug }: { cardSlug: string }) {
     if (!currentArticle) {
       return <span> Not article </span>;
     }
+
     return (
       <article className={classes.article}>
         {currentArticle !== null && <CardHeader isAlone={false} article={currentArticle} />}
+
         <main className={classes.article_content}>
           <Markdown value={currentArticle.body} />
         </main>

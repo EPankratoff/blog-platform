@@ -3,9 +3,11 @@ import { format, parseISO } from 'date-fns';
 import { enGB } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import classNames from 'classnames';
+import { Button, Popconfirm } from 'antd';
 
 import { CardData } from '../../Types/CardTyps';
 import like from '../../assets/like.svg';
+import { useAppSelector } from '../../hooks/hooks';
 
 import classes from './CardHeader.module.scss';
 
@@ -18,10 +20,14 @@ export default function CardHeader({
 }) {
   const { title, author, createdAt, description, tagList } = article;
 
+  const { currentUser } = useAppSelector((state) => state.fetchReducer);
+
   const headerClass = classNames({
     [classes['app-card']]: true,
     [classes['app-card--alone']]: isAlone,
   });
+
+  const token = localStorage.getItem('token');
 
   const formateDate = format(parseISO(createdAt), 'MMMM dd, yyyy', { locale: enGB });
 
@@ -66,6 +72,25 @@ export default function CardHeader({
       <div className={classes['card-article']}>
         <p className={classes['card-article-description']}>{description}</p>
       </div>
+      {token && !isAlone && article.author.username === currentUser?.username && (
+        <div className={classes['card-article-change']}>
+          <Popconfirm
+            title="Delete the task"
+            description="Are you sure to delete this task?"
+            okText="Yes"
+            cancelText="No"
+            placement="right"
+          >
+            <Button danger>Delete</Button>
+          </Popconfirm>
+
+          <Link to={`/articles/${article.slug}/edit`}>
+            <button className={classes['card-article-change--edit']} type="button">
+              Edit
+            </button>
+          </Link>
+        </div>
+      )}
     </header>
   );
 }
