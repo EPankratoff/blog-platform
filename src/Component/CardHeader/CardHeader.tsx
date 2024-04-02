@@ -26,6 +26,10 @@ export default function CardHeader({
   const token = localStorage.getItem('token');
   const formateDate = format(parseISO(createdAt), 'MMMM dd, yyyy', { locale: enGB });
   const history = useHistory();
+  let currentUsername;
+  if (currentUser) {
+    currentUsername = currentUser.username;
+  }
 
   useEffect(() => {
     if (!loading && isDeleteSuccess) {
@@ -79,11 +83,11 @@ export default function CardHeader({
       <div className={classes['card-article']}>
         <p className={classes['card-article-description']}>{description}</p>
       </div>
-      {token && !isAlone && article.author.username === currentUser?.username && (
+      {token && article.author.username === currentUsername && !isAlone && (
         <div className={classes['card-article-change']}>
           <Popconfirm
             title="Delete the task"
-            description="Are you sure to delete this task?"
+            description="Are you sure to delete this article?"
             okText="Yes"
             cancelText="No"
             placement="right"
@@ -93,7 +97,7 @@ export default function CardHeader({
           </Popconfirm>
 
           <Link to={`/articles/${article.slug}/edit`}>
-            <button className={classes['card-article-change--edit']} type="button">
+            <button type="button" className={classes['card-article-change--edit']}>
               Edit
             </button>
           </Link>

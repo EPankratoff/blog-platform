@@ -1,10 +1,16 @@
+import { useEffect } from 'react';
 import { Redirect, useHistory } from 'react-router-dom';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import { useEffect } from 'react';
 import uniqid from 'uniqid';
 
+import {
+  fetchCreateArticle,
+  fetchCard,
+  fetchEditArticle,
+  clearCurrentArticle,
+  clearError,
+} from '../../store/fetchSlice';
 import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
-import { fetchCreateArticle, fetchCard } from '../../store/fetchSlice';
 
 import classes from './ArticleForm.module.scss';
 
@@ -16,15 +22,15 @@ export interface IFieldCreateArticle {
 }
 
 export default function ArticleForm({ articleSlug = null }: { articleSlug: string | null }) {
-  const token = localStorage.getItem('token');
+  const history = useHistory();
   const { loading, error, currentArticle, currentUser } = useAppSelector(
     (state) => state.fetchReducer
   );
   const dispatch = useAppDispatch();
-  const history = useHistory();
   const title = currentArticle?.title || '';
   const description = currentArticle?.description || '';
   const text = currentArticle?.body || '';
+  const token = localStorage.getItem('token');
 
   const {
     control,
@@ -40,18 +46,19 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
     },
   });
 
-  const { append, fields, remove } = useFieldArray({ name: 'tags', control });
-
   useEffect(() => {
     if (articleSlug) {
       dispatch(fetchCard({ slug: articleSlug, token: null }));
+      console.log(articleSlug);
     } else {
+      dispatch(clearCurrentArticle());
       reset();
       reset({
         tags: [{ name: '' }],
       });
     }
   }, [dispatch, articleSlug]);
+  console.log(articleSlug);
 
   useEffect(() => {
     if (submitCount && !error && !loading && !isSubmitting && !Object.keys(errors).length) {
@@ -59,25 +66,43 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
     }
   }, [isSubmitting, loading]);
 
+  const { append, fields, remove } = useFieldArray({ name: 'tags', control });
+
   const onSubmit: SubmitHandler<IFieldCreateArticle> = (data) => {
     if (token) {
-      dispatch(
-        fetchCreateArticle({
-          body: {
-            article: {
-              title: data.title,
-              description: data.description,
-              body: data.text,
-              tagList: data.tags.map((tag) => tag.name),
+      if (articleSlug) {
+        dispatch(
+          fetchEditArticle({
+            body: {
+              article: {
+                title: data.title,
+                description: data.description,
+                body: data.text,
+                tagList: data.tags.map((tag) => tag.name),
+              },
             },
-          },
-          token,
-        })
-      );
+            token,
+            slug: articleSlug,
+          })
+        );
+      } else {
+        dispatch(
+          fetchCreateArticle({
+            body: {
+              article: {
+                title: data.title,
+                description: data.description,
+                body: data.text,
+                tagList: data.tags.map((tag) => tag.name),
+              },
+            },
+            token,
+          })
+        );
+      }
     }
-    // reset()
   };
-  // (currentArticle && currentUser && currentArticle.author.username !== currentUser.username)
+
   return !token ||
     (currentArticle && currentUser && currentArticle.author.username !== currentUser.username) ? (
     <Redirect to="/sign-in" />
@@ -172,7 +197,11 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
           </button>
         </section>
 
-        <button className={classes['form-article-button']} type="submit">
+        <button
+          onClick={() => dispatch(clearError('all'))}
+          className={classes['form-article-button']}
+          type="submit"
+        >
           Send
         </button>
       </form>

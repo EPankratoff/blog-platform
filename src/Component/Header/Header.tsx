@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
 import user from '../../assets/user.png';
-import { fetchUser, logOut } from '../../store/fetchSlice';
+import { clearCurrentArticle, clearError, fetchUser, logOut } from '../../store/fetchSlice';
 
 import classes from './Header.module.scss';
 
@@ -25,7 +25,13 @@ export default function Header() {
       </Link>
       {currentUser ? (
         <div className={classes['header-btn']}>
-          <Link to="/new-article">
+          <Link
+            onClick={() => {
+              dispatch(clearError('all'));
+              dispatch(clearCurrentArticle());
+            }}
+            to="/new-article"
+          >
             <button className={classes['header-btn_create']} type="button">
               Create article
             </button>

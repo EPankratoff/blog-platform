@@ -9,7 +9,7 @@ import { fetchCard } from '../../store/fetchSlice';
 
 import classes from './Card.module.scss';
 
-export default function Card({ cardSlug }: { cardSlug: string }) {
+export default function Card({ articleSlug }: { articleSlug: string }) {
   const { currentArticle, loading } = useAppSelector((state) => state.fetchReducer);
   const dispatch = useAppDispatch();
 
@@ -17,11 +17,11 @@ export default function Card({ cardSlug }: { cardSlug: string }) {
 
   useEffect(() => {
     if (token) {
-      dispatch(fetchCard({ slug: cardSlug, token }));
+      dispatch(fetchCard({ slug: articleSlug, token }));
     } else {
-      dispatch(fetchCard({ slug: cardSlug, token: null }));
+      dispatch(fetchCard({ slug: articleSlug, token: null }));
     }
-  }, [dispatch, cardSlug]);
+  }, [dispatch, articleSlug]);
 
   function renderArticle() {
     if (!currentArticle) {
@@ -30,7 +30,7 @@ export default function Card({ cardSlug }: { cardSlug: string }) {
 
     return (
       <article className={classes.article}>
-        {currentArticle !== null && <CardHeader isAlone={false} article={currentArticle} />}
+        <CardHeader isAlone={false} article={currentArticle} />
 
         <main className={classes.article_content}>
           <Markdown value={currentArticle.body} />

@@ -3,17 +3,23 @@ import { useEffect } from 'react';
 import { ConfigProvider, Pagination, Spin } from 'antd';
 
 import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
-import { clearDeleteState, fetchCards } from '../../store/fetchSlice';
+import { clearCurrentArticle, clearDeleteState, fetchCards } from '../../store/fetchSlice';
 import CardHeader from '../CardHeader/CardHeader';
 
 import classes from './CardList.module.scss';
 
 export default function CardList() {
   const dispatch = useAppDispatch();
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     dispatch(clearDeleteState());
-    dispatch(fetchCards({ offset: 0 }));
+    dispatch(clearCurrentArticle());
+    if (token) {
+      dispatch(fetchCards({ offset: 0, token }));
+    } else {
+      dispatch(fetchCards({ offset: 0, token: null }));
+    }
   }, [dispatch]);
 
   const { articles, articlesCount } = useAppSelector((state) => state.fetchReducer);
@@ -47,7 +53,11 @@ export default function CardList() {
           defaultCurrent={1}
           total={articlesCount}
           onChange={(value) => {
-            dispatch(fetchCards({ offset: 5 * (value - 1) }));
+            if (token) {
+              dispatch(fetchCards({ offset: 5 * (value - 1), token }));
+            } else {
+              dispatch(fetchCards({ offset: 5 * (value - 1), token: null }));
+            }
           }}
         />
       </ConfigProvider>

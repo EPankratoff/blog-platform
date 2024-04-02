@@ -29,7 +29,7 @@ const initialState: FetchSliceState = {
 
 export const fetchCards = createAsyncThunk<
   FetchSliceState,
-  { offset: number },
+  { offset: number; token: string | null },
   { rejectValue: string }
 >('fetch/fetchCards', async ({ offset }, { rejectWithValue }) => {
   try {
@@ -49,16 +49,22 @@ export const fetchCard = createAsyncThunk<
   { slug: string; token: string | null },
   { rejectValue: string }
 >('fetch/fetchCard', async (args, { rejectWithValue }) => {
-  try {
-    const response = await fetch(`${baseUrl}/articles/${args.slug}`);
-    if (!response.ok) {
-      throw new Error(`Неудалось получить slug ${response.status}`);
-    }
-    const data = await response.json();
-    return data.article;
-  } catch (error) {
-    return rejectWithValue(`Error: ${(error as Error).message}`);
+  let response;
+  if (args.token) {
+    response = await fetch(`${baseUrl}/articles/${args.slug}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Token ${args.token}`,
+      },
+    });
+  } else {
+    response = await fetch(`${baseUrl}/articles/${args.slug}`);
   }
+  const data = await response.json();
+  if (!response.ok) {
+    return rejectWithValue(`Server Error ${response.status} ${data.errors.message}`);
+  }
+  return data.article;
 });
 
 export const fetchCreateUser = createAsyncThunk<User, CreateUser, { rejectValue: string }>(
@@ -196,6 +202,26 @@ export const fetchDeleteArticle = createAsyncThunk<
   return '';
 });
 
+export const fetchEditArticle = createAsyncThunk<
+  CardData,
+  { body: CreateArticle; slug: string; token: string },
+  { rejectValue: string }
+>('fetch/fetchEditArticle', async (args, { rejectWithValue }) => {
+  const response = await fetch(`${baseUrl}/articles/${args.slug}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Token ${args.token}`,
+    },
+    body: JSON.stringify(args.body),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    return rejectWithValue(data.errors.message);
+  }
+  return data.article;
+});
+
 function isError(action: Action) {
   return action.type.endsWith('rejected');
 }
@@ -225,9 +251,20 @@ const fetchSlice = createSlice({
     clearDeleteState: (state) => {
       state.isDeleteSuccess = false;
     },
+    clearCurrentArticle: (state) => {
+      state.currentArticle = null;
+    },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchCard.pending, (state) => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(fetchCard.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentArticle = action.payload;
+      })
       .addCase(fetchCards.pending, (state) => {
         state.loading = true;
         state.error = '';
@@ -237,22 +274,6 @@ const fetchSlice = createSlice({
         state.articlesCount = action.payload.articlesCount;
         state.loading = false;
         state.error = '';
-      })
-      .addCase(fetchCards.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload ? action.payload : 'Unknown error';
-      })
-      .addCase(fetchCard.pending, (state) => {
-        state.loading = true;
-        state.error = '';
-      })
-      .addCase(fetchCard.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentArticle = action.payload;
-      })
-      .addCase(fetchCard.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload ? action.payload : 'Unknown error';
       })
       .addCase(fetchCreateUser.pending, (state) => {
         state.loading = true;
@@ -295,8 +316,16 @@ const fetchSlice = createSlice({
         state.error = '';
       })
       .addCase(fetchCreateArticle.fulfilled, (state, action) => {
-        state.loading = false;
         state.currentArticle = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchEditArticle.pending, (state) => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(fetchEditArticle.fulfilled, (state, action) => {
+        state.currentArticle = action.payload;
+        state.loading = false;
       })
       .addCase(fetchDeleteArticle.pending, (state) => {
         state.loading = true;
@@ -313,5 +342,5 @@ const fetchSlice = createSlice({
   },
 });
 
-export const { logOut, clearError, clearDeleteState } = fetchSlice.actions;
+export const { logOut, clearError, clearDeleteState, clearCurrentArticle } = fetchSlice.actions;
 export default fetchSlice.reducer;

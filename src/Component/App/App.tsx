@@ -21,7 +21,7 @@ export default function App() {
               path="/articles/:slug"
               render={({ match }) => {
                 const { slug } = match.params;
-                return <Card cardSlug={slug} />;
+                return <Card articleSlug={slug} />;
               }}
             />
             <Route exact path="/sign-in" component={SignIn} />
@@ -29,8 +29,8 @@ export default function App() {
             <Route exact path="/profile" component={EditProfile} />
             <Route exact path="/new-article" component={ArticleForm} />
             <Route
-              exact
               path="/articles/:slug/edit"
+              exact
               render={({ match }) => {
                 const { slug } = match.params;
                 return <ArticleForm articleSlug={slug} />;
