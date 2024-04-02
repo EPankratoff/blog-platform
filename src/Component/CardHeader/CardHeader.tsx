@@ -1,13 +1,15 @@
 import uniqid from 'uniqid';
 import { format, parseISO } from 'date-fns';
 import { enGB } from 'date-fns/locale';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import classNames from 'classnames';
 import { Button, Popconfirm } from 'antd';
+import { useEffect } from 'react';
 
 import { CardData } from '../../Types/CardTyps';
 import like from '../../assets/like.svg';
-import { useAppSelector } from '../../hooks/hooks';
+import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
+import { fetchDeleteArticle } from '../../store/fetchSlice';
 
 import classes from './CardHeader.module.scss';
 
@@ -19,17 +21,22 @@ export default function CardHeader({
   isAlone: boolean;
 }) {
   const { title, author, createdAt, description, tagList } = article;
+  const { currentUser, isDeleteSuccess, loading } = useAppSelector((state) => state.fetchReducer);
+  const dispatch = useAppDispatch();
+  const token = localStorage.getItem('token');
+  const formateDate = format(parseISO(createdAt), 'MMMM dd, yyyy', { locale: enGB });
+  const history = useHistory();
 
-  const { currentUser } = useAppSelector((state) => state.fetchReducer);
+  useEffect(() => {
+    if (!loading && isDeleteSuccess) {
+      history.push('/');
+    }
+  }, [isDeleteSuccess, loading, history]);
 
   const headerClass = classNames({
     [classes['app-card']]: true,
     [classes['app-card--alone']]: isAlone,
   });
-
-  const token = localStorage.getItem('token');
-
-  const formateDate = format(parseISO(createdAt), 'MMMM dd, yyyy', { locale: enGB });
 
   const tagsItem = tagList
     .filter((tag) => tag?.match(/\S/))
@@ -80,6 +87,7 @@ export default function CardHeader({
             okText="Yes"
             cancelText="No"
             placement="right"
+            onConfirm={() => dispatch(fetchDeleteArticle({ token, slug: article.slug }))}
           >
             <Button danger>Delete</Button>
           </Popconfirm>

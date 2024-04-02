@@ -14,6 +14,7 @@ export type FetchSliceState = {
   articlesCount: number;
   currentArticle: CardData | null;
   currentUser: User | null;
+  isDeleteSuccess: boolean;
 };
 
 const initialState: FetchSliceState = {
@@ -23,6 +24,7 @@ const initialState: FetchSliceState = {
   articlesCount: 0,
   currentArticle: null,
   currentUser: null,
+  isDeleteSuccess: false,
 };
 
 export const fetchCards = createAsyncThunk<
@@ -176,6 +178,24 @@ export const fetchCreateArticle = createAsyncThunk<
   return data.article;
 });
 
+export const fetchDeleteArticle = createAsyncThunk<
+  string,
+  { slug: string; token: string },
+  { rejectValue: string }
+>('fetch/fetchDeleteArticle', async (args, { rejectWithValue }) => {
+  const response = await fetch(`${baseUrl}/articles/${args.slug}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Token ${args.token}`,
+    },
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    return rejectWithValue(data.errors.message);
+  }
+  return '';
+});
+
 function isError(action: Action) {
   return action.type.endsWith('rejected');
 }
@@ -201,6 +221,9 @@ const fetchSlice = createSlice({
       if (!Object.keys(state.error).length) {
         state.error = '';
       }
+    },
+    clearDeleteState: (state) => {
+      state.isDeleteSuccess = false;
     },
   },
   extraReducers: (builder) => {
@@ -275,6 +298,14 @@ const fetchSlice = createSlice({
         state.loading = false;
         state.currentArticle = action.payload;
       })
+      .addCase(fetchDeleteArticle.pending, (state) => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(fetchDeleteArticle.fulfilled, (state) => {
+        state.loading = false;
+        state.isDeleteSuccess = true;
+      })
       .addMatcher(isError, (state, action: PayloadAction<string>) => {
         state.error = action.payload;
         state.loading = false;
@@ -282,5 +313,5 @@ const fetchSlice = createSlice({
   },
 });
 
-export const { logOut, clearError } = fetchSlice.actions;
+export const { logOut, clearError, clearDeleteState } = fetchSlice.actions;
 export default fetchSlice.reducer;

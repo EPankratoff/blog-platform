@@ -24,11 +24,12 @@ export default function App() {
                 return <Card cardSlug={slug} />;
               }}
             />
-            <Route path="/sign-in" component={SignIn} />
-            <Route path="/sign-up" component={SignUp} />
-            <Route path="/profile" component={EditProfile} />
-            <Route path="/new-article" component={ArticleForm} />
+            <Route exact path="/sign-in" component={SignIn} />
+            <Route exact path="/sign-up" component={SignUp} />
+            <Route exact path="/profile" component={EditProfile} />
+            <Route exact path="/new-article" component={ArticleForm} />
             <Route
+              exact
               path="/articles/:slug/edit"
               render={({ match }) => {
                 const { slug } = match.params;

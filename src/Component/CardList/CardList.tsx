@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { ConfigProvider, Pagination, Spin } from 'antd';
 
 import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
-import { fetchCards } from '../../store/fetchSlice';
+import { clearDeleteState, fetchCards } from '../../store/fetchSlice';
 import CardHeader from '../CardHeader/CardHeader';
 
 import classes from './CardList.module.scss';
@@ -12,6 +12,7 @@ export default function CardList() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    dispatch(clearDeleteState());
     dispatch(fetchCards({ offset: 0 }));
   }, [dispatch]);
 
