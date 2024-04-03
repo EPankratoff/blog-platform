@@ -10,6 +10,12 @@
   &-title {
     @include form-title;
   }
+  &-error {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 22px;
+    color: #f5222d;
+  }
 
   //   &-inputs {
   //     @include form-inputs;
@@ -32,6 +38,9 @@
 
     &--tag {
       width: 300px;
+    }
+    &--warning {
+      @include form-input--warning;
     }
   }
   &-button {

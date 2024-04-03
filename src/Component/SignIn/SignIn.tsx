@@ -1,6 +1,7 @@
 import { Link, Redirect, useHistory } from 'react-router-dom';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
+import classNames from 'classnames';
 
 import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
 import { clearError, fetchUserLogin } from '../../store/fetchSlice';
@@ -55,16 +56,11 @@ export default function SignIn() {
     }
   };
 
-  // function renderErrors(field: 'email' | 'password') {
-  //   if (typeof error === 'object' && error[field]) {
-  //     return <span className={classes['form-sign-in-error']}>{`${field} уже существует`}</span>;
-  //   }
-  //   if (field === 'password' && passwordError) {
-  //     return <span className={classes['form-sign-in-error']}>{passwordError}</span>;
-  //   }
-  //   return null;
-  // }
-
+  function inputClasses(input: keyof IFieldIn) {
+    return classNames(classes['form-sign-in-input'], {
+      [classes['form-sign-in-input--warning']]: errors[input],
+    });
+  }
   return token ? (
     <Redirect to="/" />
   ) : (
@@ -83,14 +79,13 @@ export default function SignIn() {
                 },
               })}
               placeholder="Email address"
-              className={classes['form-sign-in-input']}
+              className={inputClasses('email')}
               type="email"
             />
           </label>
           {errors.email && (
             <span className={classes['form-sign-in-error']}>{errors.email.message as string}</span>
           )}
-          {/* {renderErrors('email')} */}
           <span className={classes['form-sign-in-error']}>{passwordError}</span>
 
           <label className={classes['form-sign-in-label']}>
@@ -113,7 +108,7 @@ export default function SignIn() {
                 onChange: () => dispatch(clearError('password')),
               })}
               placeholder="Password"
-              className={classes['form-sign-in-input']}
+              className={inputClasses('password')}
               type="password"
             />
           </label>

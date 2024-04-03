@@ -33,6 +33,10 @@
   padding: 8px 12px;
   outline-color: #1890ff;
 }
+@mixin form-input--warning {
+  border: 1px solid var(--color-red);
+  outline-color: var(--color-red);
+}
 
 @mixin form-title {
   text-align: center;

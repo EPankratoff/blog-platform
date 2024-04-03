@@ -11,6 +11,8 @@ import classes from './CardList.module.scss';
 export default function CardList() {
   const dispatch = useAppDispatch();
   const token = localStorage.getItem('token');
+  const { articles, articlesCount, currentUser } = useAppSelector((state) => state.fetchReducer);
+  const loading = useAppSelector((state) => state.fetchReducer.loading);
 
   useEffect(() => {
     dispatch(clearDeleteState());
@@ -20,10 +22,7 @@ export default function CardList() {
     } else {
       dispatch(fetchCards({ offset: 0, token: null }));
     }
-  }, [dispatch]);
-
-  const { articles, articlesCount } = useAppSelector((state) => state.fetchReducer);
-  const loading = useAppSelector((state) => state.fetchReducer.loading);
+  }, [currentUser]);
 
   const cardsItem = articles.map((article) => (
     <li className={classes['cardlist-item']} key={uniqid.time('cards:')}>

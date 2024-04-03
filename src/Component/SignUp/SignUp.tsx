@@ -1,6 +1,7 @@
 import { Link, Redirect, useHistory } from 'react-router-dom';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useEffect } from 'react';
+import classNames from 'classnames';
 
 import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
 import { fetchCreateUser, clearError } from '../../store/fetchSlice';
@@ -54,6 +55,12 @@ export default function SignUp() {
     return null;
   }
 
+  function inputClasses(input: keyof IField) {
+    return classNames(classes['form-sign-up-input'], {
+      [classes['form-sign-up-input--warning']]: errors[input],
+    });
+  }
+
   return token ? (
     <Redirect to="/" />
   ) : (
@@ -82,7 +89,7 @@ export default function SignUp() {
                 onChange: () => dispatch(clearError('username')),
               })}
               placeholder="Username"
-              className={classes['form-sign-up-input']}
+              className={inputClasses('username')}
               type="text"
             />
           </label>
@@ -104,7 +111,7 @@ export default function SignUp() {
                 onChange: () => dispatch(clearError('email')),
               })}
               placeholder="Email address"
-              className={classes['form-sign-up-input']}
+              className={inputClasses('email')}
               type="email"
             />
           </label>
@@ -131,7 +138,7 @@ export default function SignUp() {
                 },
               })}
               placeholder="Password"
-              className={classes['form-sign-up-input']}
+              className={inputClasses('password')}
               type="password"
             />
           </label>
@@ -161,7 +168,7 @@ export default function SignUp() {
                 validate: (value) => value === watch('password') || 'Пароли не совпадают',
               })}
               placeholder="Password"
-              className={classes['form-sign-up-input']}
+              className={inputClasses('passwordrepeat')}
               type="password"
             />
           </label>

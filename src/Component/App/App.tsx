@@ -19,15 +19,16 @@ export default function App() {
           <Switch>
             <Route
               path="/articles/:slug"
+              exact
               render={({ match }) => {
                 const { slug } = match.params;
                 return <Card articleSlug={slug} />;
               }}
             />
-            <Route exact path="/sign-in" component={SignIn} />
-            <Route exact path="/sign-up" component={SignUp} />
-            <Route exact path="/profile" component={EditProfile} />
-            <Route exact path="/new-article" component={ArticleForm} />
+            <Route path="/sign-in" exact component={SignIn} />
+            <Route path="/sign-up" exact component={SignUp} />
+            <Route path="/profile" exact component={EditProfile} />
+            <Route path="/new-article" exact component={ArticleForm} />
             <Route
               path="/articles/:slug/edit"
               exact
@@ -36,6 +37,7 @@ export default function App() {
                 return <ArticleForm articleSlug={slug} />;
               }}
             />
+
             <Route path="/" exact component={CardList} />
             <Redirect to="/" />
           </Switch>

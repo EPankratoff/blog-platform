@@ -1,15 +1,20 @@
+import { useEffect } from 'react';
 import uniqid from 'uniqid';
 import { format, parseISO } from 'date-fns';
 import { enGB } from 'date-fns/locale';
 import { Link, useHistory } from 'react-router-dom';
 import classNames from 'classnames';
 import { Button, Popconfirm } from 'antd';
-import { useEffect } from 'react';
 
 import { CardData } from '../../Types/CardTyps';
 import like from '../../assets/like.svg';
+import likeFill from '../../assets/likeFill.svg';
 import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
-import { fetchDeleteArticle } from '../../store/fetchSlice';
+import {
+  fetchDeleteArticle,
+  fetchFavoriteArticle,
+  fetchUnfavoriteArticle,
+} from '../../store/fetchSlice';
 
 import classes from './CardHeader.module.scss';
 
@@ -20,7 +25,7 @@ export default function CardHeader({
   article: CardData;
   isAlone: boolean;
 }) {
-  const { title, author, createdAt, description, tagList } = article;
+  const { title, author, createdAt, description, tagList, favorited, favoritesCount } = article;
   const { currentUser, isDeleteSuccess, loading } = useAppSelector((state) => state.fetchReducer);
   const dispatch = useAppDispatch();
   const token = localStorage.getItem('token');
@@ -35,7 +40,7 @@ export default function CardHeader({
     if (!loading && isDeleteSuccess) {
       history.push('/');
     }
-  }, [isDeleteSuccess, loading, history]);
+  }, [isDeleteSuccess]);
 
   const headerClass = classNames({
     [classes['app-card']]: true,
@@ -50,6 +55,16 @@ export default function CardHeader({
       </li>
     ));
 
+  function handleLike() {
+    if (token) {
+      if (!favorited) {
+        dispatch(fetchFavoriteArticle({ token, slug: article.slug }));
+      } else {
+        dispatch(fetchUnfavoriteArticle({ token, slug: article.slug }));
+      }
+    }
+  }
+
   return (
     <header className={headerClass}>
       <div className={classes['card-info']}>
@@ -58,9 +73,9 @@ export default function CardHeader({
             <Link to={`/articles/${article.slug}`} className={classes['card-title_link']}>
               <h2>{title}</h2>
             </Link>
-            <button type="button" className={classes.like}>
-              <img src={like} alt="Like" />
-              <span>0</span>
+            <button type="button" className={classes.like} onClick={() => handleLike()}>
+              {favorited ? <img src={likeFill} alt="LikeFill" /> : <img src={like} alt="Like" />}
+              <span>{favoritesCount}</span>
             </button>
           </div>
           <div className={classes.user}>

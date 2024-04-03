@@ -19,6 +19,9 @@
   }
   &-input {
     @include form-input;
+    &--warning {
+      @include form-input--warning;
+    }
   }
   &-button {
     @include form-button;

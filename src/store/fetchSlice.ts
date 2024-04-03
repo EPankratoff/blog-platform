@@ -31,17 +31,23 @@ export const fetchCards = createAsyncThunk<
   FetchSliceState,
   { offset: number; token: string | null },
   { rejectValue: string }
->('fetch/fetchCards', async ({ offset }, { rejectWithValue }) => {
-  try {
-    const response = await fetch(`${baseUrl}/articles?limit=5&offset=${offset}`);
-    if (!response.ok) {
-      throw new Error(`Server Error: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error: unknown) {
-    return rejectWithValue(`Error: ${(error as Error).message}`);
+>('fetch/fetchCards', async (args, { rejectWithValue }) => {
+  let response;
+  if (args.token) {
+    response = await fetch(`${baseUrl}/articles?limit=5&offset=${args.offset}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Token ${args.token}`,
+      },
+    });
+  } else {
+    response = await fetch(`${baseUrl}/articles?limit=5&offset=${args.offset}`);
   }
+  const data = await response.json();
+  if (!response.ok) {
+    return rejectWithValue(`Server Error ${response.status} ${data.errors.message}`);
+  }
+  return data;
 });
 
 export const fetchCard = createAsyncThunk<
@@ -222,6 +228,42 @@ export const fetchEditArticle = createAsyncThunk<
   return data.article;
 });
 
+export const fetchFavoriteArticle = createAsyncThunk<
+  CardData,
+  { slug: string; token: string },
+  { rejectValue: string }
+>('fetch/fetchFavoriteArticle', async (args, { rejectWithValue }) => {
+  const response = await fetch(`${baseUrl}/articles/${args.slug}/favorite`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Token ${args.token}`,
+    },
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    return rejectWithValue(data.errors.message);
+  }
+  return data.article;
+});
+
+export const fetchUnfavoriteArticle = createAsyncThunk<
+  CardData,
+  { slug: string; token: string },
+  { rejectValue: string }
+>('fetch/fetchUnfavoriteArticle', async (args, { rejectWithValue }) => {
+  const response = await fetch(`${baseUrl}/articles/${args.slug}/favorite`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Token ${args.token}`,
+    },
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    return rejectWithValue(data.errors.message);
+  }
+  return data.article;
+});
+
 function isError(action: Action) {
   return action.type.endsWith('rejected');
 }
@@ -334,6 +376,28 @@ const fetchSlice = createSlice({
       .addCase(fetchDeleteArticle.fulfilled, (state) => {
         state.loading = false;
         state.isDeleteSuccess = true;
+      })
+      .addCase(fetchFavoriteArticle.pending, (state) => {
+        state.error = '';
+        /* state.loading = true; */
+      })
+      .addCase(fetchFavoriteArticle.fulfilled, (state, action) => {
+        state.articles[
+          state.articles?.findIndex((article) => article.slug === action.payload.slug)
+        ] = action.payload;
+        state.currentArticle = action.payload;
+        /* state.loading = false; */
+      })
+      .addCase(fetchUnfavoriteArticle.pending, (state) => {
+        state.error = '';
+        /* state.loading = true; */
+      })
+      .addCase(fetchUnfavoriteArticle.fulfilled, (state, action) => {
+        state.articles[
+          state.articles?.findIndex((article) => article.slug === action.payload.slug)
+        ] = action.payload;
+        state.currentArticle = action.payload;
+        /* state.loading = false; */
       })
       .addMatcher(isError, (state, action: PayloadAction<string>) => {
         state.error = action.payload;

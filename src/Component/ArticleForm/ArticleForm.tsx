@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Redirect, useHistory } from 'react-router-dom';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import uniqid from 'uniqid';
+import classNames from 'classnames';
 
 import {
   fetchCreateArticle,
@@ -14,12 +15,12 @@ import { useAppDispatch, useAppSelector } from '../../hooks/hooks';
 
 import classes from './ArticleForm.module.scss';
 
-export interface IFieldCreateArticle {
+type IFieldCreateArticle = {
   title: string;
   description: string;
   text: string;
   tags: { name: string }[];
-}
+};
 
 export default function ArticleForm({ articleSlug = null }: { articleSlug: string | null }) {
   const history = useHistory();
@@ -49,7 +50,6 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
   useEffect(() => {
     if (articleSlug) {
       dispatch(fetchCard({ slug: articleSlug, token: null }));
-      console.log(articleSlug);
     } else {
       dispatch(clearCurrentArticle());
       reset();
@@ -58,7 +58,6 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
       });
     }
   }, [dispatch, articleSlug]);
-  console.log(articleSlug);
 
   useEffect(() => {
     if (submitCount && !error && !loading && !isSubmitting && !Object.keys(errors).length) {
@@ -103,6 +102,12 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
     }
   };
 
+  function inputClasses(input: keyof IFieldCreateArticle) {
+    return classNames(classes['form-article-input'], {
+      [classes['form-article-input--warning']]: errors[input],
+    });
+  }
+
   return !token ||
     (currentArticle && currentUser && currentArticle.author.username !== currentUser.username) ? (
     <Redirect to="/sign-in" />
@@ -118,7 +123,7 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
             })}
             defaultValue={title}
             placeholder="Title"
-            className={classes['form-article-input']}
+            className={inputClasses('title')}
             type="text"
           />
         </label>
@@ -134,7 +139,7 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
             })}
             defaultValue={description}
             placeholder="Title"
-            className={classes['form-article-input']}
+            className={inputClasses('description')}
             type="text"
           />
         </label>
@@ -152,7 +157,7 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
             })}
             defaultValue={text}
             placeholder="Text"
-            className={classes['form-article-input--textarea']}
+            className={`${inputClasses('text')} ${classes['form-article-input--textarea']}`}
           />
         </label>
         {errors.text && (
@@ -165,13 +170,7 @@ export default function ArticleForm({ articleSlug = null }: { articleSlug: strin
             {fields.map((_, index) => (
               <li key={uniqid.time('tag:')} className={classes['form-article-section-list-item']}>
                 <input
-                  {...register(`tags.${index}.name`, {
-                    pattern: {
-                      value: /^[a-zA-Z0-9]+$/,
-                      message:
-                        'You can use only english letters and digits without spaces and other symbols',
-                    },
-                  })}
+                  {...register(`tags.${index}.name`, {})}
                   placeholder="Tag"
                   className={`${classes['form-article-input']} ${classes['form-article-input--tag']}`}
                   type="text"
